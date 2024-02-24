@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restaurant Bill Generator</title>
+  <link rel="icon" href="image.jpg">
+  <style>
+    /* Additional CSS for table styling */
+    body {
+      background-image: url('image.jpg');
+      background-size: cover;
+      background-position: center;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #000000; /* Adjust text color for better visibility */
+    }
+    body::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(245, 237, 237, 0.5); /* Adjust the opacity (last value) as needed */
+      z-index: -1;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .cancel-btn {
+      background-color: #ff4d4d;
+      color: white;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .container {
+      text-align: center;
+    }
+    .divider {
+      margin-bottom: 10px;
+    }
+    .menu-option-btn {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      padding: 10px 20px;
+      margin: 0 5px;
+    }
+    .menu-option-btn:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body img src="image.jpg">
+  <div class="container">
+    <h1><img src="image.jpg" alt="Restaurant Logo" style="vertical-align: middle; height: 50px;"> SEC RESTAURANT</h1>
+    <p>no.7, 26th street, jawaharlah rehru road, perambur, chennai - 600489.</p>
+    <p>Phone: 8754420703</p>
+    <hr class="divider">
+    <p>-----------------------------------</p>
+    <p>Bill Number: <input type="text" id="bill-number" value="001"></p>
+    <p>Table Number: 
+      <select id="table-number">
+        <!-- Table options will be dynamically added here -->
+      </select>
+    </p>
+    <p>Date and Time: <span id="date-time"></span></p>
+    <p>-----------------------------------</p>
+    <input type="text" id="product-input" oninput="showMenuOptions(this.value)">
+    <div id="menu-options"></div>
+    <table id="menu">
+      <thead>
+        <tr>
+          <th>S.NO</th>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Rate</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Menu items will be dynamically added here -->
+      </tbody>
+    </table>
+    <p>Total Bill: Rs. <span id="total-bill">0.00</span></p>
+    <button onclick="generateBill()">Generate Bill</button>
+    <button onclick="printBill()">Print Bill</button>
+  </div>
+
+  <script>
+    let menuOptions = [
+      { name: 'Dosai', price: 40 },
+      { name: 'Masala Dosai', price: 60 },
+      { name: 'Ghee Roast', price: 80 },
+      { name: 'Paper Roast', price: 80 },
+      { name: 'chola poori', price: 90 },
+      { name: 'rava dosai', price: 50 },
+      { name: 'uthappam', price: 50 },
+      { name: 'Chapati', price: 40 },
+      { name: 'Idly', price: 20 },
+      { name: 'Poori', price: 40 },
+      { name: 'Vadai', price: 10 },
+      { name: 'vegetable Briyani', price: 60 },
+      { name: 'Fried Rice', price: 80 },
+      { name: 'keerai rice', price: 45 },
+      { name: 'tomato rice', price: 35 },
+      { name: 'lemon rice', price: 30 },
+      { name: 'Sambar', price: 40 },
+      { name: 'Curd', price: 35 },
+      { name: 'Brinji', price: 25 },
+      { name: 'Parotta', price: 40 },
+      { name: 'Paneer Rice', price: 40 },
+      { name: 'Idly Podi', price: 30 },
+      { name: 'veg meals', price: 80 },
+    ];
+
+    function showMenuOptions(searchTerm) {
+      const menuOptionsDiv = document.getElementById('menu-options');
+      menuOptionsDiv.innerHTML = '';
+      const filteredOptions = menuOptions.filter(option => option.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      filteredOptions.slice(0, 10).forEach(option => {
+        const optionElement = document.createElement('div');
+        optionElement.textContent = `${option.name} - Rs. ${option.price}`;
+        optionElement.classList.add('menu-option');
+        optionElement.addEventListener('click', () => addMenuItem(option.name, option.price));
+        menuOptionsDiv.appendChild(optionElement);
+      });
+    }
+
+    function addMenuItem(productName, productPrice) {
+      const menuTable = document.getElementById('menu').getElementsByTagName('tbody')[0];
+      const newRow = menuTable.insertRow();
+
+      const cell1 = newRow.insertCell(0);
+      const cell2 = newRow.insertCell(1);
+      const cell3 = newRow.insertCell(2);
+      const cell4 = newRow.insertCell(3);
+      const cell5 = newRow.insertCell(4);
+
+      cell1.textContent = menuTable.rows.length;
+      cell2.textContent = productName;
+      cell3.innerHTML = '<input type="number" class="item-quantity" value="1" min="1">';
+      cell4.textContent = productPrice;
+      cell5.innerHTML = 'Rs. <span class="amount">0.00</span>';
+
+      calculateBill();
+    }
+
+    function calculateBill() {
+      const rows = document.getElementById('menu').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+      let total = 0;
+      for (let i = 0; i < rows.length; i++) {
+        const price = parseFloat(rows[i].cells[3].textContent);
+        const quantity = parseInt(rows[i].cells[2].querySelector('.item-quantity').value);
+        if (!isNaN(price) && !isNaN(quantity)) {
+          const amount = price * quantity;
+          rows[i].cells[4].querySelector('.amount').textContent = amount.toFixed(2);
+          total += amount;
+        }
+      }
+      document.getElementById('total-bill').textContent = total.toFixed(2);
+    }
+
+    function printBill() {
+      window.print();
+    }
+
+    function generateBill() {
+      const dateTime = new Date().toLocaleString();
+      document.getElementById('date-time').textContent = dateTime;
+      calculateBill();
+    }
+
+    // Populate table numbers
+    const tableNumberSelect = document.getElementById('table-number');
+    for (let i = 1; i <= 20; i++) {
+      const option = document.createElement('option');
+      option.text = i;
+      option.value = i;
+      tableNumberSelect.add(option);
+    }
+  </script>
+</body>
+</html>
